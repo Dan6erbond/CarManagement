@@ -18,6 +18,7 @@ export const typeDef = gql`
   type User {
     id: ID!
     username: String!
+    customer: Customer
   }
 `;
 
@@ -49,19 +50,34 @@ export const resolvers = {
      * @return {?User}
      */
     user: async (_, { id, username }, { db }) => {
-      let where = {}
+      let where = {};
       if (id) {
-        where = {...where, id}
+        where = { ...where, id };
       }
       if (username) {
-        where = {...where, username}
+        where = { ...where, username };
       }
       /**
        * @type {?User}
        */
-      const user = await db.first("*").from("users").where(where)
+      const user = await db.first("*").from("users").where(where);
       return user;
     },
   },
-  User: {},
+  User: {
+    /**
+     * Fetch the user's associated customer model.
+     * @param {User} parent The user parent object.
+     * @param {Object} _
+     * @param {Object} ctx GraphQL context variables.
+     * @param {Knex} ctx.db The Knex DB instance.
+     */
+    customer: async (parent, _, { db }) => {
+      /**
+       * @type {import("./customer").Customer}
+       */
+      const customer = db.first("*").from("customers").where({ user_id: parent.id });
+      return customer;
+    },
+  },
 };
