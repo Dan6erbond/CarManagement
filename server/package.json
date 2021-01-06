@@ -23,6 +23,7 @@
     "graphql": "^15.4.0",
     "jsonwebtoken": "^8.5.1",
     "knex": "^0.21.14",
+    "lodash": "^4.17.20",
     "node-cache": "^5.1.2",
     "nodemailer": "^6.4.16",
     "nodemon": "^2.0.6",
