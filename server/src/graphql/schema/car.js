@@ -1,6 +1,14 @@
 import { gql } from "apollo-server-express";
 import Knex from "knex";
 
+/**
+ * A car model, with related data about its rental pricing, make and model.
+ * @typedef {Object} Car
+ * @property {number} id The car's database ID.
+ * @property {string} model The car's model name.
+ * @property {number} price_per_day The price to rent the car per day.
+ */
+
 export const typeDef = gql`
   extend type Query {
     car(id: Int!): Car
@@ -22,8 +30,12 @@ export const resolvers = {
      * @param {number} args.id The car ID to query for.
      * @param {Object} ctx GraphQL context variables.
      * @param {Knex} ctx.db The Knex DB instance.
+     * @returns {Car}
      */
     car: async (_, { id }, { db }) => {
+      /**
+       * @type {Car}
+       */
       const car = await db.first("*").from("cars").where({ id });
       return car;
     },
