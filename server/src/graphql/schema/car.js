@@ -2,7 +2,7 @@ import { gql } from "apollo-server-express";
 import Knex from "knex";
 
 /**
- * A car model, with related data about its rental pricing, make and model.
+ * A car model.
  * @typedef {Object} Car
  * @property {number} id The car's database ID.
  * @property {string} model The car's model name.
