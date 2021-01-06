@@ -54,9 +54,11 @@ export const resolvers = {
     /**
      * Fetch a car's make.
      * @param {Car} parent The parent car object.
+     * @param {Object} ctx GraphQL context variables.
+     * @param {Knex} ctx.db The Knex DB instance.
      * @returns {import("./make").Make}
      */
-    make: async (parent) => {
+    make: async (parent, _, { db }) => {
       /**
        * @type {import("./make").Make}
        */
