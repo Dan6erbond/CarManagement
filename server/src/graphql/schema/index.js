@@ -2,6 +2,7 @@ import { gql, makeExecutableSchema } from "apollo-server-express";
 import { merge } from "lodash";
 import { resolvers as carResolvers, typeDef as Car } from "./car";
 import { resolvers as makeResolvers, typeDef as Make } from "./make";
+import { resolvers as rentalResolvers, typeDef as Rental } from "./rental";
 
 const Query = gql`
   type Query {
