@@ -20,6 +20,7 @@ export const typeDef = gql`
   type Rental {
     id: ID!
     car: Car!
+    customer: Customer!
     rentalStart: Date!
     rentalEnd: Date
   }
@@ -56,24 +57,35 @@ export const resolvers = {
       /**
        * @type {import("./car").Car[]}
        */
-      const cars = await db.first("*").from("cars").where({ id: parent.car_id });
-      return cars;
+      const car = await db.first("*").from("cars").where({ id: parent.car_id });
+      return car;
+    },
+    /**
+     * Fetch the user that belongs to this rental object.
+     * @param {Rental} parent The parent rental object.
+     * @param {Object} _
+     * @param {Object} ctx GraphQL context variables.
+     * @param {Knex} ctx.db The Knex DB instance.
+     * @returns {import("./customer").Customer[]}
+     */
+    customer: async (parent, _, { db }) => {
+      /**
+       * @type {import("./customer").Customer[]}
+       */
+      const customer = await db.first("*").from("customers").where({ id: parent.customer_id });
+      return customer;
     },
     /**
      * Remap rental_start to rentalStart for GraphQL.
      * @param {Rental} parent The parent rental object.
      * @returns {Date}
      */
-    rentalStart: (parent) => {
-      return new Date(parent.rental_start);
-    },
+    rentalStart: (parent) => new Date(parent.rental_start),
     /**
      * Remap rental_end to rentalEnd for GraphQL.
      * @param {Rental} parent The parent rental object.
      * @returns {?Date}
      */
-    rentalEnd: (parent) => {
-      return new Date(parent.rental_end);
-    },
+    rentalEnd: (parent) => new Date(parent.rental_end),
   },
 };
