@@ -5,6 +5,7 @@ import Knex from "knex";
  * A car model.
  * @typedef {Object} Car
  * @property {number} id The car's database ID.
+ * @property {number} make_id The car make's database ID.
  * @property {string} model The car's model name.
  * @property {number} price_per_day The price to rent the car per day.
  */
