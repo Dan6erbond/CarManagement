@@ -40,5 +40,14 @@ export const resolvers = {
       return car;
     },
   },
-  Car: {},
+  Car: {
+    /**
+     * Remap the car's price_per_day property to pricePerDay for GraphQL.
+     * @param {Car} parent The parent car object.
+     * @returns {number}
+     */
+    pricePerDay: (parent) => {
+      return parent.price_per_day;
+    }
+  },
 };
