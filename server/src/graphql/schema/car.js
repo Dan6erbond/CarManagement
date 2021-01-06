@@ -18,6 +18,7 @@ export const typeDef = gql`
   type Car {
     id: ID!
     model: String!
+    make: Make!
     pricePerDay: Float!
   }
 `;
@@ -49,6 +50,18 @@ export const resolvers = {
      */
     pricePerDay: (parent) => {
       return parent.price_per_day;
-    }
+    },
+    /**
+     * Fetch a car's make.
+     * @param {Car} parent The parent car object.
+     * @returns {import("./make").Make}
+     */
+    make: async (parent) => {
+      /**
+       * @type {import("./make").Make}
+       */
+      const make = await db.first("*").from("makes").where({ id: parent.make_id });
+      return make;
+    },
   },
 };
