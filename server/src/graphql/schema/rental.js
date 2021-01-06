@@ -8,7 +8,7 @@ import Knex from "knex";
  * @property {number} car_id The car's database ID.
  * @property {number} customer_id The customer's database ID.
  * @property {Date} rental_start The start date of the rental.
- * @property {(?Date)} rental_end The end date of the rental.
+ * @property {?Date} rental_end The end date of the rental.
  */
 
 export const typeDef = gql`
@@ -56,8 +56,24 @@ export const resolvers = {
       /**
        * @type {import("./car").Car[]}
        */
-      const cars = await db.select("*").from("cars").where({ id: parent.car_id });
+      const cars = await db.first("*").from("cars").where({ id: parent.car_id });
       return cars;
+    },
+    /**
+     * Remap rental_start to rentalStart for GraphQL.
+     * @param {Rental} parent The parent rental object.
+     * @returns {Date}
+     */
+    rentalStart: (parent) => {
+      return new Date(parent.rental_start);
+    },
+    /**
+     * Remap rental_end to rentalEnd for GraphQL.
+     * @param {Rental} parent The parent rental object.
+     * @returns {?Date}
+     */
+    rentalEnd: (parent) => {
+      return new Date(parent.rental_end);
     },
   },
 };
