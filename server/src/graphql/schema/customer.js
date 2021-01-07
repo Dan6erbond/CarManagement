@@ -5,9 +5,20 @@ import Knex from "knex";
  * A customer model.
  * @typedef {Object} Customer
  * @property {number} id The customer's database ID.
- * @property {number} user_id The customer user's database ID.
+ * @property {?number} user_id The customer user's database ID.
  * @property {string} first_name The customer's first name.
  * @property {string} last_name The customer's last name.
+ *
+ * The input object provided as GraphQL args to createCustomer.
+ * @typedef {Object} CreateCustomerInput
+ * @property {?number} userId The customer's associated user, if given.
+ * @property {string} firstName The customer's first name.
+ * @property {string} lastName The customer's last name.
+ *
+ * The payload returned by createCustomer.
+ * @typedef {Object} CreateCustomerPayload
+ * @property {?Customer} customer The newly created customer.
+ * @property {?string} error Errors if any are thrown.
  */
 
 export const typeDef = gql`
@@ -18,10 +29,25 @@ export const typeDef = gql`
 
   type Customer {
     id: ID!
-    user: User!
+    user: User
     rentals: [Rental!]!
     firstName: String!
     lastName: String!
+  }
+
+  input CreateCustomerInput {
+    userId: ID
+    firstName: String!
+    lastName: String!
+  }
+
+  type CreateCustomerPayload {
+    customer: Customer
+    error: String
+  }
+
+  extend type Mutation {
+    createCustomer(input: CreateCustomerInput!): CreateCustomerPayload!
   }
 `;
 
@@ -76,6 +102,9 @@ export const resolvers = {
      * @returns {import("./user").User}
      */
     user: async (parent, _, { db }) => {
+      if (!parent.user_id) {
+        return;
+      }
       /**
        * @type {import("./user").User}
        */
@@ -96,6 +125,39 @@ export const resolvers = {
        */
       const rentals = await db.select("*").from("rentals").where({ customer_id: parent.id });
       return rentals;
+    },
+  },
+  Mutation: {
+    /**
+     * Create a customer object and return the payload.
+     * @param {Object} _
+     * @param {Object} args Arguments passed to the query.
+     * @param {CreateCustomerInput} args.input The input argument passed to the mutation.
+     * @param {Object} ctx GraphQL context variables.
+     * @param {Knex} ctx.db The Knex DB instance.
+     * @returns {CreateCustomerPayload}
+     */
+    createCustomer: async (_, { input }, { db }) => {
+      const { userId, firstName, lastName } = input;
+
+      if (userId) {
+        const user = await db.first("*").from("users").where({ id: userId });
+        if (!user) {
+          return {
+            error: `The user specified by ID ${userId} does not exist.`,
+          };
+        }
+      }
+
+      const values = { user_id: userId, first_name: firstName, last_name: lastName };
+      const [id] = await db.insert(values).into("customers");
+
+      return {
+        customer: {
+          ...values,
+          id,
+        },
+      };
     },
   },
 };
