@@ -1,0 +1,13 @@
+const Knex = require("knex");
+
+/**
+ * Run the migration and perform the operations.
+ * @param {Knex} knex
+ */
+exports.seed = function (knex) {
+  // Deletes ALL existing entries
+  return knex("table_name")
+    .del()
+    .then(function () {
+    });
+};

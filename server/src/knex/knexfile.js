@@ -12,8 +12,11 @@ module.exports = {
       filename: path.join(__dirname, "..", "..", "tmp", "db.sqlite"),
     },
     useNullAsDefault: true,
-    migrations: {
-      stub: "migration.stub",
-    },
+  },
+  migrations: {
+    stub: "migration.stub",
+  },
+  seeds: {
+    stub: "seed.stub",
   },
 };
