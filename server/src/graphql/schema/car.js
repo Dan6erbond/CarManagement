@@ -8,6 +8,12 @@ import Knex from "knex";
  * @property {number} make_id The car make's database ID.
  * @property {string} model The car's model name.
  * @property {number} price_per_day The price to rent the car per day.
+ *
+ * The input object provided as GraphQL args to createCar.
+ * @typedef {Object} CreateCarInput
+ * @property {string} model The model name.
+ * @property {string} makeId The make ID to be associated with this vehicle model.
+ * @property {number} pricePerDay The price per day to rent this vehicle.
  */
 
 export const typeDef = gql`
@@ -22,6 +28,21 @@ export const typeDef = gql`
     make: Make!
     pricePerDay: Float!
     rentals: [Rental!]!
+  }
+
+  input CreateCarInput {
+    model: String!
+    makeId: ID!
+    pricePerDay: Float!
+  }
+
+  type CreateCarPayload {
+    car: Car
+    error: String
+  }
+
+  extend type Mutation {
+    createCar(input: CreateCarInput!): CreateCarPayload!
   }
 `;
 
@@ -46,6 +67,7 @@ export const resolvers = {
     /**
      * Fetch all the cars in the database.
      * @param {Object} _
+     * @param {Object} args Arguments passed to the query.
      * @param {Object} ctx GraphQL context variables.
      * @param {Knex} ctx.db The Knex DB instance.
      * @returns {Car[]}
@@ -68,6 +90,7 @@ export const resolvers = {
     /**
      * Fetch a car's make.
      * @param {Car} parent The parent car object.
+     * @param {Object} args Arguments passed to the query.
      * @param {Object} ctx GraphQL context variables.
      * @param {Knex} ctx.db The Knex DB instance.
      * @returns {import("./make").Make}
@@ -82,6 +105,7 @@ export const resolvers = {
     /**
      * Fetch all the rentals associated with a car.
      * @param {Car} parent The parent car object.
+     * @param {Object} args Arguments passed to the query.
      * @param {Object} ctx GraphQL context variables.
      * @param {Knex} ctx.db The Knex DB instance.
      * @return {import("./rental").Rental[]}
@@ -92,6 +116,36 @@ export const resolvers = {
        */
       const rentals = await db.select("*").from("rentals").where({ car_id: parent.id });
       return rentals;
+    },
+  },
+  Mutation: {
+    /**
+     * Create a car object and return the payload.
+     * @param {Object} _
+     * @param {Object} args Arguments passed to the query.
+     * @param {CreateCarInput} args.input The input argument passed to the mutation.
+     * @param {Object} ctx GraphQL context variables.
+     * @param {Knex} ctx.db The Knex DB instance.
+     */
+    createCar: async (_, { input }, { db }) => {
+      const { makeId, pricePerDay, ...carData } = input;
+
+      const make = await db.first("*").from("makes").where({ id: makeId });
+      if (!make) {
+        return {
+          error: `The make by ID ${makeId} does not exist.`,
+        };
+      }
+
+      const values = { ...carData, price_per_day: pricePerDay, make_id: makeId };
+      const [id] = await db.insert(values).into("cars");
+
+      return {
+        car: {
+          ...values,
+          id,
+        },
+      };
     },
   },
 };
