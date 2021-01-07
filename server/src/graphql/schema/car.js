@@ -14,6 +14,11 @@ import Knex from "knex";
  * @property {string} model The model name.
  * @property {string} makeId The make ID to be associated with this vehicle model.
  * @property {number} pricePerDay The price per day to rent this vehicle.
+ *
+ * The payload returned by createCar.
+ * @typedef {Object} CreateCarPayload
+ * @property {?Car} car The newly created car.
+ * @property {?string} error Errors if any are thrown.
  */
 
 export const typeDef = gql`
@@ -126,6 +131,7 @@ export const resolvers = {
      * @param {CreateCarInput} args.input The input argument passed to the mutation.
      * @param {Object} ctx GraphQL context variables.
      * @param {Knex} ctx.db The Knex DB instance.
+     * @returns {CreateCarPayload}
      */
     createCar: async (_, { input }, { db }) => {
       const { makeId, pricePerDay, ...carData } = input;
