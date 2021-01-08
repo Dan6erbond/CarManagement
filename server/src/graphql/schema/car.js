@@ -1,6 +1,6 @@
 import { gql } from "apollo-server-express";
 import Knex from "knex";
-import { identity, isNil, omitBy, pickBy } from "lodash";
+import { isNil, omitBy } from "lodash";
 
 /**
  * A car model.
@@ -30,7 +30,7 @@ import { identity, isNil, omitBy, pickBy } from "lodash";
  *
  * The payload returned by editCar.
  * @typedef {Object} EditCarPayload
- * @property {Car} car The update car.
+ * @property {Car} car The updated car.
  * @property {?string} error Errors if any are thrown.
  */
 
@@ -67,7 +67,7 @@ export const typeDef = gql`
   }
 
   type EditCarPayload {
-    car: Car!
+    car: Car
     error: String
   }
 
@@ -191,6 +191,9 @@ export const resolvers = {
     editCar: async (_, { input }, { db }) => {
       const { id, makeId, pricePerDay, ...carData } = input;
 
+      /**
+       * @type {Car}
+       */
       const car = await db.first("*").from("cars").where({ id });
       if (!car) {
         return {
