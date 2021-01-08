@@ -9,6 +9,16 @@ import Knex from "knex";
  * @property {number} customer_id The customer's database ID.
  * @property {Date} rental_start The start date of the rental.
  * @property {?Date} rental_end The end date of the rental.
+ *
+ * The input object provided as GraphQL args to rentCar.
+ * @typedef {Object} RentCarInput
+ * @property {string} carId The car ID to rent.
+ * @property {string} customerId The customer ID who's renting.
+ *
+ * The payload returned by rentCar.
+ * @typedef {Object} RentCarPayload
+ * @property {Rental} rental The rental information.
+ * @property {?string} error Errors if any are thrown.
  */
 
 export const typeDef = gql`
@@ -25,6 +35,19 @@ export const typeDef = gql`
     rentalEnd: Date
     duration: Int!
   }
+
+  input RentCarInput {
+    carId: ID!
+    customerId: ID!
+  }
+
+  type RentCarPayload {
+    rental: Rental!
+    error: String
+  }
+
+  extend type Mutation {
+    rentCar(input: RentCarInput!): RentCarPayload!
   }
 `;
 
@@ -101,5 +124,48 @@ export const resolvers = {
       return diffDays;
     },
   },
+  Mutation: {
+    /**
+     * Rent a car object to the specified customer.
+     * @param {Object} _
+     * @param {Object} args Arguments passed to the query.
+     * @param {RentCarInput} args.input The input argument passed to the mutation.
+     * @param {Object} ctx GraphQL context variables.
+     * @param {Knex} ctx.db The Knex DB instance.
+     * @returns {RentCarPayload}
+     */
+    rentCar: async (_, { input }, { db }) => {
+      const { carId, customerId } = input;
+
+      /**
+       * @type {import("./car").Car}
+       */
+      const car = await db.first("*").from("cars").where({ id: carId });
+      if (!car) {
+        return {
+          error: `The car by ID ${carId} does not exist.`,
+        };
+      }
+
+      /**
+       * @type {import("./customer").Customer}
+       */
+      const customer = await db.first("*").from("customers").where({ id: customerId });
+      if (!customer) {
+        return {
+          error: `The customer by ID ${customerId} does not exist.`,
+        };
+      }
+
+      const values = { rental_start: Date.now(), customer_id: customerId, car_id: carId };
+      const [id] = await db.insert(values).into("rentals");
+
+      return {
+        rental: {
+          id,
+          ...values,
+        },
+      };
+    },
   },
 };
