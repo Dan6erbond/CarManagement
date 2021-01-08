@@ -63,6 +63,7 @@ export const typeDef = gql`
 
   extend type Mutation {
     rentCar(input: RentCarInput!): RentCarPayload!
+    returnCar(input: ReturnCarInput!): ReturnCarPayload!
   }
 `;
 
