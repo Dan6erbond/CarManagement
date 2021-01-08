@@ -6,6 +6,7 @@ import Knex from "knex";
  * @typedef {Object} Make
  * @property {number} id The make's database ID.
  * @property {string} name The make's name.
+ * @property {string} slug The make's name, slugified.
  */
 
 export const typeDef = gql`
@@ -17,6 +18,7 @@ export const typeDef = gql`
   type Make {
     id: ID!
     name: String!
+    slug: String!
     cars: [Car!]!
   }
 `;
