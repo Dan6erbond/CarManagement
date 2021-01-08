@@ -1,4 +1,5 @@
 const Knex = require("knex");
+const slugify = require("../../helpers/slugify");
 
 /**
  * Run the migration and perform the operations.
@@ -9,8 +10,7 @@ exports.seed = function (knex) {
   return knex("cars")
     .del()
     .then(function () {
-      // Inserts seed entries
-      return knex("cars").insert([
+      let values = [
         { id: 1, make_id: 1, model: "E250 CDI", price_per_day: 100, units: Math.ceil(Math.random() * 15) },
         { id: 2, make_id: 1, model: "SLS AMG GT", price_per_day: 300, units: Math.ceil(Math.random() * 15) },
         { id: 3, make_id: 1, model: "G63 AMG", price_per_day: 150, units: Math.ceil(Math.random() * 15) },
@@ -92,6 +92,9 @@ exports.seed = function (knex) {
         { id: 73, make_id: 28, model: "RX7", price_per_day: 150, units: Math.ceil(Math.random() * 15) },
         { id: 74, make_id: 28, model: "MX5", price_per_day: 110, units: Math.ceil(Math.random() * 15) },
         { id: 75, make_id: 28, model: "RX8", price_per_day: 170, units: Math.ceil(Math.random() * 15) },
-      ]);
+      ];
+      values = values.map((car) => ({ ...car, slug: slugify(car.model) }));
+      // Inserts seed entries
+      return knex("cars").insert(values);
     });
 };

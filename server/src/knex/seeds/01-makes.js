@@ -1,4 +1,5 @@
 const Knex = require("knex");
+const slugify = require("../../helpers/slugify");
 
 /**
  * Run the migration and perform the operations.
@@ -9,8 +10,7 @@ exports.seed = function (knex) {
   return knex("makes")
     .del()
     .then(function () {
-      // Inserts seed entries
-      return knex("makes").insert([
+      let values = [
         { id: 1, name: "Mercedes" },
         { id: 2, name: "BMW" },
         { id: 3, name: "Audi" },
@@ -39,6 +39,9 @@ exports.seed = function (knex) {
         { id: 26, name: "Peugeot" },
         { id: 27, name: "Citroën" },
         { id: 28, name: "Mazda" },
-      ]);
+      ];
+      values = values.map((make) => ({ ...make, slug: slugify(make.name) }));
+      // Inserts seed entries
+      return knex("makes").insert(values);
     });
 };
