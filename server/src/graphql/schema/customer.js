@@ -1,5 +1,6 @@
 import { gql } from "apollo-server-express";
 import Knex from "knex";
+import { isNil, omitBy } from "lodash";
 
 /**
  * A customer model.
@@ -18,6 +19,18 @@ import Knex from "knex";
  * The payload returned by createCustomer.
  * @typedef {Object} CreateCustomerPayload
  * @property {?Customer} customer The newly created customer.
+ * @property {?string} error Errors if any are thrown.
+ *
+ * The input object provided as GraphQL args to editCustomer.
+ * @typedef {Object} EditCustomerInput
+ * @property {string} id The customer ID to update.
+ * @property {?string} userId The user to assign the customer to.
+ * @property {?string} firstName The customer's first name.
+ * @property {?string} lastName The customer's last name..
+ *
+ * The payload returned by editCustomer.
+ * @typedef {Object} EditCustomerPayload
+ * @property {Customer} customer The updated customer.
  * @property {?string} error Errors if any are thrown.
  */
 
@@ -46,8 +59,20 @@ export const typeDef = gql`
     error: String
   }
 
+  input EditCustomerInput {
+    userId: ID
+    firstName: String
+    lastName: String
+  }
+
+  type EditCustomerPayload {
+    customer: Customer
+    error: String
+  }
+
   extend type Mutation {
     createCustomer(input: CreateCustomerInput!): CreateCustomerPayload!
+    editCustomer(input: EditCustomerInput!): EditCustomerPayload!
   }
 `;
 
@@ -156,6 +181,48 @@ export const resolvers = {
         customer: {
           ...values,
           id,
+        },
+      };
+    },
+    /**
+     * Update a customer object and return the payload.
+     * @param {Object} _
+     * @param {Object} args Arguments passed to the query.
+     * @param {EditCustomerInput} args.input The input argument passed to the mutation.
+     * @param {Object} ctx GraphQL context variables.
+     * @param {Knex} ctx.db The Knex DB instance.
+     * @returns {EditCarPayload}
+     */
+    editCustomer: async (_, { input }, { db }) => {
+      const { id, firstName, lastName, userId } = input;
+
+      /**
+       * @type {Customer}
+       */
+      const customer = await db.first("*").from("customers").where({ id });
+      if (!customer) {
+        return {
+          error: `The customer by ID ${id} does not exist.`,
+        };
+      }
+
+      if (userId) {
+        const user = await db.first("*").from("users").where({ id: userId });
+        if (!user) {
+          return {
+            error: `The user by ID ${userId} does not exist.`,
+          };
+        }
+      }
+
+      let values = { first_name: firstName, last_name: lastName, user_id: userId };
+      values = omitBy(values, isNil);
+      await db.update(values).table("customers").where({ id });
+
+      return {
+        customer: {
+          ...customer,
+          ...values,
         },
       };
     },
