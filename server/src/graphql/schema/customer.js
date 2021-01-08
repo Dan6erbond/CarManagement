@@ -190,6 +190,10 @@ export const resolvers = {
           const diffDays = Math.ceil(diff / 1000 / 60 / 60 / 24);
 
           return total + rental.price_per_day * diffDays;
+        },
+        0,
+      );
+    },
   },
   Mutation: {
     /**
