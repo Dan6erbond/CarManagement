@@ -39,7 +39,7 @@ import slugify from "../../helpers/slugify";
 
 export const typeDef = gql`
   extend type Query {
-    car(id: ID!): Car
+    car(id: ID, slug: String): Car
     cars: [Car!]!
   }
 
@@ -89,16 +89,24 @@ export const resolvers = {
      * Fetch a car by its ID.
      * @param {Object} _
      * @param {Object} args Arguments passed to the query.
-     * @param {number} args.id The car ID to query for.
+     * @param {?number} args.id The car ID to query for.
+     * @param {?string} args.slug The car slug to query for.
      * @param {Object} ctx GraphQL context variables.
      * @param {Knex} ctx.db The Knex DB instance.
      * @returns {?Car}
      */
-    car: async (_, { id }, { db }) => {
+    car: async (_, { id, slug }, { db }) => {
+      let where = {};
+      if (id) {
+        where = { ...where, id };
+      }
+      if (slug) {
+        where = { ...where, slug };
+      }
       /**
        * @type {?Car}
        */
-      const car = await db.first("*").from("cars").where({ id });
+      const car = await db.first("*").from("cars").where(where);
       return car;
     },
     /**
