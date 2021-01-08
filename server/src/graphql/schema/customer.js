@@ -30,7 +30,7 @@ import { isNil, omitBy } from "lodash";
  *
  * The payload returned by editCustomer.
  * @typedef {Object} EditCustomerPayload
- * @property {Customer} customer The updated customer.
+ * @property {?Customer} customer The updated customer.
  * @property {?string} error Errors if any are thrown.
  */
 
