@@ -12,7 +12,7 @@ import Knex from "knex";
 export const typeDef = gql`
   extend type Query {
     makes: [Make!]!
-    make(id: ID, name: String): Make
+    make(id: ID, name: String, slug: String): Make
   }
 
   type Make {
@@ -44,19 +44,23 @@ export const resolvers = {
      * Fetch a make by ID or name.
      * @param {Object} _
      * @param {Object} args GraphQL query arguments.
-     * @param {string} args.id The ID to retrieve a make by.
-     * @param {string} args.name The name to retrieve a make by.
+     * @param {?string} args.id The ID to retrieve a make by.
+     * @param {?string} args.name The name to retrieve a make by.
+     * @param {?string} args.slug The slug to retrieve a make by.
      * @param {Object} ctx GraphQL context variables.
      * @param {Knex} ctx.db The Knex DB instance.
      * @returns {?Make}
      */
-    make: async (_, { id, name }, { db }) => {
+    make: async (_, { id, name, slug }, { db }) => {
       let where = {};
       if (id) {
         where = { ...where, id };
       }
       if (name) {
         where = { ...where, name };
+      }
+      if (slug) {
+        where = { ...where, slug };
       }
       /**
        * @type {(?Make)}
