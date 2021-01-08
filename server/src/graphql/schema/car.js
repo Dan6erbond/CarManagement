@@ -1,5 +1,6 @@
 import { gql } from "apollo-server-express";
 import Knex from "knex";
+import { identity, isNil, omitBy, pickBy } from "lodash";
 
 /**
  * A car model.
@@ -18,6 +19,18 @@ import Knex from "knex";
  * The payload returned by createCar.
  * @typedef {Object} CreateCarPayload
  * @property {?Car} car The newly created car.
+ * @property {?string} error Errors if any are thrown.
+ *
+ * The input object provided as GraphQL args to editCar.
+ * @typedef {Object} EditCarInput
+ * @property {string} id The car ID to update.
+ * @property {?string} model The model name.
+ * @property {?string} makeId The make ID to be associated with this vehicle model.
+ * @property {?number} pricePerDay The price per day to rent this vehicle.
+ *
+ * The payload returned by editCar.
+ * @typedef {Object} EditCarPayload
+ * @property {Car} car The update car.
  * @property {?string} error Errors if any are thrown.
  */
 
@@ -46,8 +59,21 @@ export const typeDef = gql`
     error: String
   }
 
+  input EditCarInput {
+    id: ID!
+    model: String
+    makeId: ID
+    pricePerDay: Float
+  }
+
+  type EditCarPayload {
+    car: Car!
+    error: String
+  }
+
   extend type Mutation {
     createCar(input: CreateCarInput!): CreateCarPayload!
+    editCar(input: EditCarInput!): EditCarPayload!
   }
 `;
 
@@ -150,6 +176,45 @@ export const resolvers = {
         car: {
           ...values,
           id,
+        },
+      };
+    },
+    /**
+     * Update a car object and return the payload.
+     * @param {Object} _
+     * @param {Object} args Arguments passed to the query.
+     * @param {EditCarInput} args.input The input argument passed to the mutation.
+     * @param {Object} ctx GraphQL context variables.
+     * @param {Knex} ctx.db The Knex DB instance.
+     * @returns {EditCarPayload}
+     */
+    editCar: async (_, { input }, { db }) => {
+      const { id, makeId, pricePerDay, ...carData } = input;
+
+      const car = await db.first("*").from("cars").where({ id });
+      if (!car) {
+        return {
+          error: `The car by ID ${id} does not exist.`,
+        };
+      }
+
+      if (makeId) {
+        const make = await db.first("*").from("makes").where({ id: makeId });
+        if (!make) {
+          return {
+            error: `The make by ID ${makeId} does not exist.`,
+          };
+        }
+      }
+
+      let values = { ...carData, price_per_day: pricePerDay, make_id: makeId };
+      values = omitBy(values, isNil);
+      await db.update(values).table("cars").where({ id });
+
+      return {
+        car: {
+          ...car,
+          ...values,
         },
       };
     },
