@@ -18,6 +18,14 @@ import Knex from "knex";
  * The payload returned by rentCar.
  * @typedef {Object} RentCarPayload
  * @property {Rental} rental The rental information.
+ *
+ * The input object provided as GraphQL args to returnCar.
+ * @typedef {Object} ReturnCarInput
+ * @property {string} rentalId The rental ID to end.
+ *
+ * The payload returned by returnCar.
+ * @typedef {Object} ReturnCarPayload
+ * @property {?Rental} rental The rental information.
  * @property {?string} error Errors if any are thrown.
  */
 
@@ -43,6 +51,13 @@ export const typeDef = gql`
 
   type RentCarPayload {
     rental: Rental!
+
+  input ReturnCarInput {
+    rentalId: ID!
+  }
+
+  type ReturnCarPayload {
+    rental: Rental
     error: String
   }
 
@@ -163,6 +178,42 @@ export const resolvers = {
       return {
         rental: {
           id,
+          ...values,
+        },
+      };
+    },
+    /**
+     * Return a car, the rental must exist.
+     * @param {Object} _
+     * @param {Object} args Arguments passed to the query.
+     * @param {ReturnCarInput} args.input The input argument passed to the mutation.
+     * @param {Object} ctx GraphQL context variables.
+     * @param {Knex} ctx.db The Knex DB instance.
+     * @returns {ReturnCarPayload}
+     */
+    returnCar: async (_, { input }, { db }) => {
+      const { rentalId } = input;
+
+      /**
+       * @type {Rental}
+       */
+      const rental = await db.first("*").from("rentals").where({ id: rentalId });
+      if (!rental) {
+        return {
+          error: `The rental by ID ${rentalId} does not exist`,
+        };
+      } else if (rental.rental_end) {
+        return {
+          error: `The car for rental by ID ${rentalId} has already been returned.`,
+        };
+      }
+
+      const values = { rental_end: Date.now() };
+      await db.update(values).table("rentals").where({ id: rentalId });
+
+      return {
+        rental: {
+          ...rental,
           ...values,
         },
       };
