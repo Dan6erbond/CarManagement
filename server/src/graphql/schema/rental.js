@@ -135,6 +135,7 @@ export const resolvers = {
     /**
      * Calculate the number of days the rental has been running for.
      * @param {Rental} parent The parent rental object.
+     * @returns {number}
      */
     duration: (parent) => {
       const rentalStart = new Date(parent.rental_start);
