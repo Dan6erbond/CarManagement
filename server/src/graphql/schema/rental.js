@@ -23,6 +23,8 @@ export const typeDef = gql`
     customer: Customer!
     rentalStart: Date!
     rentalEnd: Date
+    duration: Int!
+  }
   }
 `;
 
@@ -87,5 +89,17 @@ export const resolvers = {
      * @returns {?Date}
      */
     rentalEnd: (parent) => new Date(parent.rental_end),
+    /**
+     * Calculate the number of days the rental has been running for.
+     * @param {Rental} parent The parent rental object.
+     */
+    duration: (parent) => {
+      const rentalStart = new Date(parent.rental_start);
+      const rentalEnd = parent.rental_end ? new Date(parent.rental_end) : new Date();
+      const diff = rentalEnd.getTime() - rentalStart.getTime();
+      const diffDays = Math.ceil(diff / 1000 / 60 / 60 / 24);
+      return diffDays;
+    },
+  },
   },
 };
