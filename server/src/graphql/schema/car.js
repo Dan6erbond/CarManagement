@@ -9,6 +9,7 @@ import { isNil, omitBy } from "lodash";
  * @property {number} make_id The car make's database ID.
  * @property {string} model The car's model name.
  * @property {number} price_per_day The price to rent the car per day.
+ * @property {number} units The number of available units.
  *
  * The input object provided as GraphQL args to createCar.
  * @typedef {Object} CreateCarInput
@@ -46,6 +47,8 @@ export const typeDef = gql`
     make: Make!
     pricePerDay: Float!
     rentals: [Rental!]!
+    units: Int!
+    availableUnits: Int!
   }
 
   input CreateCarInput {
@@ -147,6 +150,21 @@ export const resolvers = {
        */
       const rentals = await db.select("*").from("rentals").where({ car_id: parent.id });
       return rentals;
+    },
+    /**
+     * Return the number of available units accounting rentals.
+     * @param {Car} parent The parent car object.
+     * @param {Object} args Arguments passed to the query.
+     * @param {Object} ctx GraphQL context variables.
+     * @param {Knex} ctx.db The Knex DB instance.
+     * @returns {number}
+     */
+    availableUnits: async (parent, _, { db }) => {
+      const [{ CNT: rentals }] = await db
+        .count("id as CNT")
+        .from("rentals")
+        .where({ car_id: parent.id, rental_end: null });
+      return Math.max(0, parent.units - rentals);
     },
   },
   Mutation: {
