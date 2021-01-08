@@ -43,6 +43,7 @@ export const typeDef = gql`
     rentalStart: Date!
     rentalEnd: Date
     duration: Int!
+    cost: Int!
   }
 
   input RentCarInput {
@@ -141,6 +142,27 @@ export const resolvers = {
       const diff = rentalEnd.getTime() - rentalStart.getTime();
       const diffDays = Math.ceil(diff / 1000 / 60 / 60 / 24);
       return diffDays;
+    },
+    /**
+     * Return the amount owed for this rental.
+     * @param {Rental} parent The parent rental object.
+     * @param {Object} _
+     * @param {Object} ctx GraphQL context variables.
+     * @param {Knex} ctx.db The Knex DB instance.
+     * @returns {number}
+     */
+    cost: async (parent, _, { db }) => {
+      const rentalStart = new Date(parent.rental_start);
+      const rentalEnd = parent.rental_end ? new Date(parent.rental_end) : new Date();
+      const diff = rentalEnd.getTime() - rentalStart.getTime();
+      const diffDays = Math.ceil(diff / 1000 / 60 / 60 / 24);
+
+      /**
+       * @type {import("./car").Car}
+       */
+      const car = await db.first("*").from("cars").where({ id: parent.car_id });
+
+      return car.price_per_day * diffDays;
     },
   },
   Mutation: {
