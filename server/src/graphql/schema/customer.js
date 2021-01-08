@@ -46,6 +46,7 @@ export const typeDef = gql`
     rentals: [Rental!]!
     firstName: String!
     lastName: String!
+    toPay: Int!
   }
 
   input CreateCustomerInput {
@@ -151,6 +152,44 @@ export const resolvers = {
       const rentals = await db.select("*").from("rentals").where({ customer_id: parent.id });
       return rentals;
     },
+    /**
+     * Fetch the total amount the customer owes for open rental.
+     * @param {Customer} parent The parent customer object.
+     * @param {Object} _
+     * @param {Object} ctx GraphQL context variables.
+     * @param {Knex} ctx.db The Knex DB instance.
+     * @returns {number}
+     */
+    toPay: async (parent, _, { db }) => {
+      /**
+       * @type {import("./rental").Rental}
+       */
+      const rentals = await db
+        .select("*")
+        .from("rentals")
+        .leftJoin("cars", "rentals.car_id", "cars.id")
+        .where({ customer_id: parent.id });
+      /**
+       * @type {number}
+       */
+      return rentals.reduce(
+        /**
+         * Accumulate the rental fees.
+         * @param {import("./rental").Rental} rental The current rental to calculate fees for.
+         * @param {number} total The accumulated value.
+         * @returns {number}
+         */
+        (total, rental) => {
+          if (rental.rental_end) {
+            return total;
+          }
+
+          const rentalStart = new Date(rental.rental_start);
+          const rentalEnd = new Date();
+          const diff = rentalEnd.getTime() - rentalStart.getTime();
+          const diffDays = Math.ceil(diff / 1000 / 60 / 60 / 24);
+
+          return total + rental.price_per_day * diffDays;
   },
   Mutation: {
     /**
