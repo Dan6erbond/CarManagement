@@ -17,7 +17,8 @@ import Knex from "knex";
  *
  * The payload returned by rentCar.
  * @typedef {Object} RentCarPayload
- * @property {Rental} rental The rental information.
+ * @property {?Rental} rental The rental information.
+ * @property {?string} error Errors if any are thrown.
  *
  * The input object provided as GraphQL args to returnCar.
  * @typedef {Object} ReturnCarInput
@@ -50,7 +51,9 @@ export const typeDef = gql`
   }
 
   type RentCarPayload {
-    rental: Rental!
+    rental: Rental
+    error: String
+  }
 
   input ReturnCarInput {
     rentalId: ID!
