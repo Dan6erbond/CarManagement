@@ -1,0 +1,22 @@
+const Knex = require("knex");
+
+/**
+ * Run the migration and perform the operations.
+ * @param {Knex} knex
+ */
+exports.up = function (knex) {
+  return knex.schema
+    .createTable("table_name", (table) => {
+      table.increments("id").primary();
+    });
+};
+
+/**
+ * Undo changes made by this migration.
+ * @param {Knex} knex
+ */
+exports.down = function (knex) {
+  return knex.schema
+    .dropTable("table_name");
+};
+
