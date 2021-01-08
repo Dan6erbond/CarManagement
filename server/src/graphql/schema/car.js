@@ -1,6 +1,7 @@
 import { gql } from "apollo-server-express";
 import Knex from "knex";
 import { isNil, omitBy } from "lodash";
+import slugify from "../../helpers/slugify";
 
 /**
  * A car model.
@@ -8,6 +9,7 @@ import { isNil, omitBy } from "lodash";
  * @property {number} id The car's database ID.
  * @property {number} make_id The car make's database ID.
  * @property {string} model The car's model name.
+ * @property {string} slug The car's model name, slugified.
  * @property {number} price_per_day The price to rent the car per day.
  * @property {number} units The number of available units.
  *
@@ -44,6 +46,7 @@ export const typeDef = gql`
   type Car {
     id: ID!
     model: String!
+    slug: String!
     make: Make!
     pricePerDay: Float!
     rentals: [Rental!]!
@@ -178,7 +181,7 @@ export const resolvers = {
      * @returns {CreateCarPayload}
      */
     createCar: async (_, { input }, { db }) => {
-      const { makeId, pricePerDay, ...carData } = input;
+      const { makeId, pricePerDay, model } = input;
 
       const make = await db.first("*").from("makes").where({ id: makeId });
       if (!make) {
@@ -187,7 +190,7 @@ export const resolvers = {
         };
       }
 
-      const values = { ...carData, price_per_day: pricePerDay, make_id: makeId };
+      const values = { model, price_per_day: pricePerDay, make_id: makeId, slug: model && slugify(model) };
       const [id] = await db.insert(values).into("cars");
 
       return {
@@ -207,7 +210,7 @@ export const resolvers = {
      * @returns {EditCarPayload}
      */
     editCar: async (_, { input }, { db }) => {
-      const { id, makeId, pricePerDay, ...carData } = input;
+      const { id, makeId, pricePerDay, model } = input;
 
       /**
        * @type {Car}
@@ -228,7 +231,7 @@ export const resolvers = {
         }
       }
 
-      let values = { ...carData, price_per_day: pricePerDay, make_id: makeId };
+      let values = { model, price_per_day: pricePerDay, make_id: makeId, slug: model && slugify(model) };
       values = omitBy(values, isNil);
       await db.update(values).table("cars").where({ id });
 
