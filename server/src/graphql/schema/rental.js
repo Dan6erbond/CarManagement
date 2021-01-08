@@ -189,6 +189,13 @@ export const resolvers = {
         };
       }
 
+      const [{ CNT: rentals }] = await db.count("id as CNT").from("rentals").where({ car_id: carId, rental_end: null });
+      if (rentals >= car.units) {
+        return {
+          error: `All units of the car by ID ${carId} are already rented out.`,
+        };
+      }
+
       /**
        * @type {import("./customer").Customer}
        */
