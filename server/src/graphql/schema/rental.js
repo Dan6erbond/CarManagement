@@ -131,7 +131,7 @@ export const resolvers = {
      * @param {Rental} parent The parent rental object.
      * @returns {?Date}
      */
-    rentalEnd: (parent) => new Date(parent.rental_end),
+    rentalEnd: (parent) => parent.rental_end && new Date(parent.rental_end),
     /**
      * Calculate the number of days the rental has been running for.
      * @param {Rental} parent The parent rental object.
