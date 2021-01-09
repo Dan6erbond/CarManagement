@@ -42,7 +42,7 @@ import slugify from "../../helpers/slugify";
 export const typeDef = gql`
   extend type Query {
     car(id: ID, slug: String): Car
-    cars: [Car!]!
+    cars(makeId: ID, makeSlug: String): [Car!]!
   }
 
   type Car {
@@ -117,15 +117,31 @@ export const resolvers = {
      * Fetch all the cars in the database.
      * @param {Object} _
      * @param {Object} args Arguments passed to the query.
+     * @param {?string} args.makeId The make ID to query by.
+     * @param {?string} args.makeSlug The make slugs to query by.
      * @param {Object} ctx GraphQL context variables.
      * @param {Knex} ctx.db The Knex DB instance.
      * @returns {Car[]}
      */
-    cars: async (_, __, { db }) => {
+    cars: async (_, { makeId, makeSlug }, { db }) => {
+      let where = {};
+      if (makeId) {
+        where = { ...where, make_id: makeId };
+      }
+      if (makeSlug) {
+        /**
+         * @type {import("./make").Make}
+         */
+        const make = await db.first("*").from("makes").where({ slug: makeSlug });
+        if (!make) {
+          return new ApolloError(`The make by slug ${makeSlug} does not exist.`);
+        }
+        where = { ...where, make_id: make.id };
+      }
       /**
        * @type {Car[]}
        */
-      const cars = await db.select("*").from("cars");
+      const cars = await db.select("*").from("cars").where(where);
       return cars;
     },
   },
