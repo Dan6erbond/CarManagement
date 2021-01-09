@@ -1,6 +1,6 @@
-import { gql } from "apollo-server-express";
+import { ApolloError, gql } from "apollo-server-express";
 import Knex from "knex";
-import { isNil, omitBy } from "lodash";
+import { isEmpty, isNil, omitBy } from "lodash";
 import slugify from "../../helpers/slugify";
 
 /**
@@ -106,6 +106,9 @@ export const resolvers = {
       }
       if (slug) {
         where = { ...where, slug };
+      }
+      if (isEmpty(where)) {
+        return new ApolloError("Either arguments ID or slug must be specified to query a single car.");
       }
       /**
        * @type {?Car}
