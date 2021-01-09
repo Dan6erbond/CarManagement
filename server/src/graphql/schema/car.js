@@ -18,6 +18,7 @@ import slugify from "../../helpers/slugify";
  * @property {string} model The model name.
  * @property {string} makeId The make ID to be associated with this vehicle model.
  * @property {number} pricePerDay The price per day to rent this vehicle.
+ * @property {number} units The number of vehicles available at the service.
  *
  * The payload returned by createCar.
  * @typedef {Object} CreateCarPayload
@@ -30,6 +31,7 @@ import slugify from "../../helpers/slugify";
  * @property {?string} model The model name.
  * @property {?string} makeId The make ID to be associated with this vehicle model.
  * @property {?number} pricePerDay The price per day to rent this vehicle.
+ * @property {?number} units The number of vehicles available at the service.
  *
  * The payload returned by editCar.
  * @typedef {Object} EditCarPayload
@@ -58,6 +60,7 @@ export const typeDef = gql`
     model: String!
     makeId: ID!
     pricePerDay: Float!
+    units: Int!
   }
 
   type CreateCarPayload {
@@ -70,6 +73,7 @@ export const typeDef = gql`
     model: String
     makeId: ID
     pricePerDay: Float
+    unit: Int
   }
 
   type EditCarPayload {
@@ -189,7 +193,7 @@ export const resolvers = {
      * @returns {CreateCarPayload}
      */
     createCar: async (_, { input }, { db }) => {
-      const { makeId, pricePerDay, model } = input;
+      const { makeId, pricePerDay, model, units } = input;
 
       const make = await db.first("*").from("makes").where({ id: makeId });
       if (!make) {
@@ -198,7 +202,7 @@ export const resolvers = {
         };
       }
 
-      const values = { model, price_per_day: pricePerDay, make_id: makeId, slug: model && slugify(model) };
+      const values = { model, units, price_per_day: pricePerDay, make_id: makeId, slug: model && slugify(model) };
       const [id] = await db.insert(values).into("cars");
 
       return {
@@ -218,7 +222,7 @@ export const resolvers = {
      * @returns {EditCarPayload}
      */
     editCar: async (_, { input }, { db }) => {
-      const { id, makeId, pricePerDay, model } = input;
+      const { id, makeId, pricePerDay, model, units } = input;
 
       /**
        * @type {Car}
@@ -239,7 +243,7 @@ export const resolvers = {
         }
       }
 
-      let values = { model, price_per_day: pricePerDay, make_id: makeId, slug: model && slugify(model) };
+      let values = { model, units, price_per_day: pricePerDay, make_id: makeId, slug: model && slugify(model) };
       values = omitBy(values, isNil);
       await db.update(values).table("cars").where({ id });
 
