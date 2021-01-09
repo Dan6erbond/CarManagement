@@ -12,19 +12,19 @@
       <template slot="start">
         <b-navbar-item tag="router-link" to="/rentals">Rentals </b-navbar-item>
         <b-navbar-dropdown label="Cars">
-          <b-navbar-item tag="router-link" to="/makes">By Make</b-navbar-item>
           <b-navbar-item tag="router-link" to="/cars">All</b-navbar-item>
+          <b-navbar-item tag="router-link" to="/makes">By Make</b-navbar-item>
         </b-navbar-dropdown>
-        <b-navbar-item tag="router-link" to="/customers">Customers</b-navbar-item>
+        <b-navbar-item tag="router-link" to="/customers">
+          Customers
+        </b-navbar-item>
       </template>
 
       <template slot="end">
-        <b-navbar-item tag="div">
-          © 2021, RaviAnand M.
-        </b-navbar-item>
+        <b-navbar-item tag="div"> © 2021, RaviAnand M. </b-navbar-item>
       </template>
     </b-navbar>
-    <router-view />
+    <main role="main" class="p-2"><router-view /></main>
   </div>
 </template>
 
