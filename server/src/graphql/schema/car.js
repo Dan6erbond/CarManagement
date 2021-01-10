@@ -42,7 +42,7 @@ import slugify from "../../helpers/slugify";
 export const typeDef = gql`
   extend type Query {
     car(id: ID, slug: String): Car
-    cars(makeId: ID, makeSlug: String, makeSlugs: [String!]): [Car!]!
+    cars(makeId: ID, makeSlug: String, makeSlugs: [String!], minPricePerDay: Int, maxPricePerDay: Int): [Car!]!
   }
 
   type Car {
@@ -123,11 +123,13 @@ export const resolvers = {
      * @param {?string} args.makeId The make ID to query by.
      * @param {?string} args.makeSlug The make slugs to query by.
      * @param {?string[]} args.makeSlugs The make slugs to query by.
+     * @param {?number} args.minPricePerDay The minimum price per day for a rental.
+     * @param {?number} args.maxPricePerDay The maximum price per day for a rental.
      * @param {Object} ctx GraphQL context variables.
      * @param {Knex} ctx.db The Knex DB instance.
      * @returns {Car[]}
      */
-    cars: async (_, { makeId, makeSlug, makeSlugs }, { db }) => {
+    cars: async (_, { makeId, makeSlug, makeSlugs, minPricePerDay, maxPricePerDay }, { db }) => {
       let query = db.select("*").from("cars");
       if (makeId) {
         query = query.where("make_id", makeId);
@@ -149,6 +151,12 @@ export const resolvers = {
         const makes = await db.select("*").from("makes").whereIn("slug", makeSlugs);
         const ids = makes.map((m) => m.id);
         query = query.whereIn("make_id", ids);
+      }
+      if (minPricePerDay !== undefined) {
+        query = query.where("price_per_day", ">=", minPricePerDay);
+      }
+      if (maxPricePerDay !== undefined) {
+        query = query.where("price_per_day", "<", maxPricePerDay);
       }
       /**
        * @type {Car[]}
