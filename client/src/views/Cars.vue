@@ -1,24 +1,36 @@
 <template>
   <div class="cars is-flex is-align-content-stretch">
     <b-sidebar position="static" type="is-light" open class="mr-4" fullheight>
-      <div class="p-2">
+      <div class="p-4">
         <b-field label="Make">
           <b-taginput
             v-model="selectedMakes"
             :data="filteredMakes"
             autocomplete
-            field="name"
             icon="car"
             placeholder="Add a make"
             @typing="setMakeSearch"
             open-on-focus
-            :before-adding="beforeAdding"
           >
             <template v-slot="props">
               {{ props.option }}
             </template>
             <template #empty> There are no items </template>
           </b-taginput>
+        </b-field>
+        <b-field label="Price per day">
+          <b-slider
+            size="is-medium"
+            :min="50"
+            :max="600"
+            v-model="priceRange"
+            rounded
+            :custom-formatter="(val) => '$' + val"
+          >
+            <template v-for="val in [100, 200, 300, 400, 500]">
+              <b-slider-tick :value="val" :key="val">{{ val }}</b-slider-tick>
+            </template>
+          </b-slider>
         </b-field>
       </div>
     </b-sidebar>
@@ -82,38 +94,40 @@ export default {
       makes: [],
       selectedMakes: [],
       makeSearch: "",
+      priceRange: [],
     };
   },
   methods: {
     setMakeSearch(val) {
       this.makeSearch = val;
     },
-    beforeAdding(val) {
-      console.log(val);
-      return true;
-    },
   },
   computed: {
     filteredMakes() {
-      return this.makes.filter(
-        (m) =>
-          m.name.toLowerCase().indexOf(this.makeSearch.toLowerCase()) !== -1
-      );
+      return this.makes
+        .filter((m) => this.selectedMakes.indexOf(m.name) === -1)
+        .filter(
+          (m) =>
+            m.name.toLowerCase().indexOf(this.makeSearch.toLowerCase()) !== -1
+        )
+        .map((m) => m.name);
     },
   },
   watch: {
-    $route: {
-      immediate: true,
-      handler(to) {
-        if (to.params.make) {
-          this.selectedMakes = [to.params.make];
-        }
-      },
+    makes(to) {
+      if (this.$route.params.make) {
+        this.selectedMakes = [
+          to.find((m) => m.slug === this.$route.params.make).name,
+        ];
+      }
     },
     selectedMakes(to) {
       if (to.length === 1) {
-        this.$router.push(`/cars/${to[0]}`);
-      } else {
+        const make = this.makes.find((m) => m.name === to[0]);
+        if (this.$route.path !== `/cars/${make.slug}`) {
+          this.$router.push(`/cars/${make.slug}`);
+        }
+      } else if (this.$route.path !== "/cars") {
         this.$router.push("/cars");
       }
     },
@@ -132,8 +146,8 @@ export default {
     },
     cars: {
       query: gql`
-        query GetCars($makeSlug: String) {
-          cars(makeSlug: $makeSlug) {
+        query GetCars($makeSlug: String, $makeSlugs: [String!]) {
+          cars(makeSlug: $makeSlug, makeSlugs: $makeSlugs) {
             id
             make {
               name
@@ -148,6 +162,13 @@ export default {
         }
       `,
       variables() {
+        if (this.selectedMakes.length > 1) {
+          return {
+            makeSlugs: this.makes
+              .filter((m) => this.selectedMakes.indexOf(m.name) !== -1)
+              .map((m) => m.slug),
+          };
+        }
         return {
           makeSlug: this.$route.params.make,
         };
