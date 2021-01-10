@@ -34,7 +34,7 @@
         </b-field>
       </div>
     </b-sidebar>
-    <section>
+    <section class="px-4">
       <h1 class="is-size-1">Cars</h1>
       <div v-if="$apollo.queries.cars.loading">
         <div class="columns is-multiline">
@@ -146,8 +146,18 @@ export default {
     },
     cars: {
       query: gql`
-        query GetCars($makeSlug: String, $makeSlugs: [String!]) {
-          cars(makeSlug: $makeSlug, makeSlugs: $makeSlugs) {
+        query GetCars(
+          $makeSlug: String
+          $makeSlugs: [String!]
+          $minPricePerDay: Int
+          $maxPricePerDay: Int
+        ) {
+          cars(
+            makeSlug: $makeSlug
+            makeSlugs: $makeSlugs
+            minPricePerDay: $minPricePerDay
+            maxPricePerDay: $maxPricePerDay
+          ) {
             id
             make {
               name
@@ -162,16 +172,24 @@ export default {
         }
       `,
       variables() {
+        let vars = {
+          minPricePerDay: this.priceRange[0],
+          maxPricePerDay: this.priceRange[1],
+        };
         if (this.selectedMakes.length > 1) {
-          return {
+          vars = {
+            ...vars,
             makeSlugs: this.makes
               .filter((m) => this.selectedMakes.indexOf(m.name) !== -1)
               .map((m) => m.slug),
           };
+        } else if (this.$route.params.make) {
+          vars = {
+            ...vars,
+            makeSlug: this.$route.params.make,
+          };
         }
-        return {
-          makeSlug: this.$route.params.make,
-        };
+        return vars;
       },
     },
   },
