@@ -2,13 +2,23 @@
   <div class="cars is-flex is-align-content-stretch">
     <b-sidebar position="static" type="is-light" open class="mr-4" fullheight>
       <div class="p-2">
-        <p class="is-has-text-weight-bold mb-2">Make</p>
-        <b-field>
-          <b-select multiple native-size="8" v-model="selectedMakes">
-            <option v-for="make in makes" :key="make.id" :value="make.slug">
-              {{ make.name }}
-            </option>
-          </b-select>
+        <b-field label="Make">
+          <b-taginput
+            v-model="selectedMakes"
+            :data="filteredMakes"
+            autocomplete
+            field="name"
+            icon="car"
+            placeholder="Add a make"
+            @typing="setMakeSearch"
+            open-on-focus
+            :before-adding="beforeAdding"
+          >
+            <template v-slot="props">
+              {{ props.option }}
+            </template>
+            <template #empty> There are no items </template>
+          </b-taginput>
         </b-field>
       </div>
     </b-sidebar>
@@ -69,8 +79,27 @@ import gql from "graphql-tag";
 export default {
   data() {
     return {
+      makes: [],
       selectedMakes: [],
+      makeSearch: "",
     };
+  },
+  methods: {
+    setMakeSearch(val) {
+      this.makeSearch = val;
+    },
+    beforeAdding(val) {
+      console.log(val);
+      return true;
+    },
+  },
+  computed: {
+    filteredMakes() {
+      return this.makes.filter(
+        (m) =>
+          m.name.toLowerCase().indexOf(this.makeSearch.toLowerCase()) !== -1
+      );
+    },
   },
   watch: {
     $route: {
@@ -90,15 +119,17 @@ export default {
     },
   },
   apollo: {
-    makes: gql`
-      {
-        makes {
-          id
-          name
-          slug
+    makes: {
+      query: gql`
+        {
+          makes {
+            id
+            name
+            slug
+          }
         }
-      }
-    `,
+      `,
+    },
     cars: {
       query: gql`
         query GetCars($makeSlug: String) {
