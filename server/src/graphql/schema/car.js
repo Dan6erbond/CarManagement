@@ -73,7 +73,7 @@ export const typeDef = gql`
     model: String
     makeId: ID
     pricePerDay: Float
-    unit: Int
+    units: Int
   }
 
   type EditCarPayload {

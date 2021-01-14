@@ -2,6 +2,7 @@ import Vue from "vue";
 import VueRouter from "vue-router";
 import Home from "../views/Home.vue";
 import Cars from "../views/Cars.vue";
+import Car from "../views/Car.vue";
 
 Vue.use(VueRouter);
 
@@ -23,8 +24,8 @@ const routes = [
   },
   {
     path: "/cars/:make/:model",
-    name: "Cars",
-    component: Cars,
+    name: "Car",
+    component: Car,
   },
   {
     path: "/rentals",
@@ -38,12 +39,12 @@ const routes = [
   },
   {
     path: "/customers",
-    name: "Home",
+    name: "Customers",
     component: Home,
   },
   {
     path: "/customers/:id",
-    name: "Home",
+    name: "Customer",
     component: Home,
   },
 ];
