@@ -29,12 +29,12 @@ const routes = [
   },
   {
     path: "/rentals",
-    name: "Home",
+    name: "Rentals",
     component: Home,
   },
   {
     path: "/rentals/:id",
-    name: "Home",
+    name: "Rental",
     component: Home,
   },
   {
